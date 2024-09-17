@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: ca-gateway
+  config:
+    import: nacos:nacos-config-example.properties?refreshEnabled=true
+  cloud:
+    nacos:
+      server-addr: 127.0.0.1:8848
+      discovery:
+        server-addr: 127.0.0.1:8848
+    gateway:
+      routes:
+        - id: golden
+          uri: http://127.0.0.1:18082
+          predicates:
+            - Path=/golden/**
+          filters:
+            - StripPrefix=1
+        - id: dawn
+          uri: http://127.0.0.1:18083
+          predicates:
+            - Path=/dawn/**
+          filters:
+            - StripPrefix=1
+        - id: user
+          uri: http://127.0.0.1:9888
+          predicates:
+            - Path=/user/**
+          filters:
+            - StripPrefix=1
+server:
+  port: 8818
