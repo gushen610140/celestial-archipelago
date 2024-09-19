@@ -1,7 +1,10 @@
 <script lang="ts" setup>
 import { resourcesUrl } from "@/utils/ResourcesUrlUtils";
 import { changeRoute } from "@/utils/RouteUtils";
-import UserLoginComp from "@/components/UserLoginComp.vue";
+import UserLoginComp from "@/components/UserInfoComp.vue";
+import UserInfoComp from "@/components/UserInfoComp.vue";
+import { useUserStore } from "@/stores/user";
+import { onMounted } from "vue";
 
 const useNavItems = () => {
   type item = {
@@ -42,6 +45,8 @@ const useNavItems = () => {
 };
 
 const { items } = useNavItems();
+
+onMounted(() => {});
 </script>
 
 <template>
@@ -67,7 +72,8 @@ const { items } = useNavItems();
       </div>
     </div>
     <div class="flex items-center">
-      <UserLoginComp></UserLoginComp>
+      <UserInfoComp v-if="useUserStore().checkLogin()"></UserInfoComp>
+      <UserLoginComp v-else></UserLoginComp>
     </div>
   </div>
 </template>

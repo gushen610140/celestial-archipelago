@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { resourcesUrl } from "@/utils/ResourcesUrlUtils";
+import { resourcesUrl } from "@/utils/ResourcesUrlUtils.js";
 </script>
 
 <template>
@@ -15,9 +15,8 @@ import { resourcesUrl } from "@/utils/ResourcesUrlUtils";
         class="mt-10 w-25 h-25 rounded-xl"
       />
       <div class="flex flex-col gap-4 ml-10 mt-10">
-        <v-form>
-          <v-text-field></v-text-field>
-        </v-form>
+        <div class="text-2xl text-white">用户昵称：</div>
+        <div class="text-2xl text-white">邮箱：</div>
       </div>
     </div>
   </div>
