@@ -1,6 +1,6 @@
 spring:
   application:
-    name: ca
+    name: ca-user
   profiles:
     active: dev
   cloud:

@@ -1,10 +1,11 @@
 <script lang="ts" setup>
 import { resourcesUrl } from "@/utils/ResourcesUrlUtils";
 import { changeRoute } from "@/utils/RouteUtils";
-import UserLoginComp from "@/components/UserInfoComp.vue";
-import UserInfoComp from "@/components/UserInfoComp.vue";
-import { useUserStore } from "@/stores/user";
 import { onMounted } from "vue";
+import UserLoginComp from "@/components/UserLoginComp.vue";
+import { useUserStore } from "@/stores/user";
+import UserInfoComp from "@/components/UserInfoComp.vue";
+import GradientTextUI from "@/components/ui/GradientTextUI.vue";
 
 const useNavItems = () => {
   type item = {
@@ -55,15 +56,15 @@ onMounted(() => {});
     class="flex h-full items-center"
   >
     <div class="flex flex-col items-center ml-40">
-      <div class="text-5xl mb-4 text-white select-none">十四洲</div>
-      <div class="text-xl mb-4 text-white select-none">Celestial Archipelago</div>
-      <div class="flex flex-col gap-4 p-4">
+      <GradientTextUI class="text-5xl font-bold mb-4">十四洲</GradientTextUI>
+      <GradientTextUI class="text-xl font-bold mb-6">Celestial Archipelago</GradientTextUI>
+      <div class="flex flex-col gap-6 p-4 glass">
         <v-btn
           v-for="item in items"
           height="50"
           rounded
           style="font-size: 1.5rem; color: white"
-          variant="outlined"
+          variant="tonal"
           width="300"
           @click="changeRoute(item.route)"
         >
@@ -72,8 +73,10 @@ onMounted(() => {});
       </div>
     </div>
     <div class="flex items-center">
-      <UserInfoComp v-if="useUserStore().checkLogin()"></UserInfoComp>
-      <UserLoginComp v-else></UserLoginComp>
+      <div class="ml-60 p-10 glass" style="width: 60rem; height: 40rem">
+        <UserLoginComp v-if="!useUserStore().token"></UserLoginComp>
+        <UserInfoComp v-else></UserInfoComp>
+      </div>
     </div>
   </div>
 </template>
