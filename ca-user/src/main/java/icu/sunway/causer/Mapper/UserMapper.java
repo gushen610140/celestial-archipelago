@@ -1,7 +1,7 @@
 package icu.sunway.causer.Mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import icu.sunway.causer.Entity.DO.User;
+import icu.sunway.causer.Entity.User;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper

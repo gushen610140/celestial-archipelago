@@ -1,4 +1,4 @@
-package icu.sunway.causer.Entity.DO;
+package icu.sunway.causer.Entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -18,5 +18,4 @@ public class User {
     private String avatar;
     private String email;
     private String password;
-    private String token;
 }

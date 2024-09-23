@@ -2,15 +2,36 @@
 import { type Ref, ref } from "vue";
 import { UserLogin } from "@/entity/user/UserLogin";
 import { error } from "@/utils/ToastUtils";
-import { LoginAPI, SendCodeAPI } from "@/apis/UserApi";
+import {
+  FindPasswordAPI,
+  LoginAPI,
+  LoginPasswordAPI,
+  RegisterAPI,
+  SendCodeAPI,
+} from "@/apis/UserApi";
 import { useUserStore } from "@/stores/user";
-import type { UserView } from "@/entity/user/UserView";
-import type { Result } from "@/entity/api/Result";
+import { UserView } from "@/entity/user/UserView";
+import { Result } from "@/entity/api/Result";
+import { UserLoginPassword } from "@/entity/user/UserLoginPassword";
+import { UserRegister } from "@/entity/user/UserRegister";
+import { UserFindPassword } from "@/entity/user/UserFindPassword";
 
 const useForm = () => {
+  enum FormType {
+    email_code = "用户验证码登录",
+    email_password = "用户密码登录",
+    register = "用户注册",
+    find_password = "忘记密码",
+  }
+  const formType = ref(FormType.email_code);
+
   const userLogin: Ref<UserLogin> = ref(new UserLogin());
   const login = () => {
-    LoginAPI(userLogin)
+    if (!userLogin.value.code || !userLogin.value.email) {
+      error("邮箱或验证码不能为空");
+      return;
+    }
+    LoginAPI(userLogin.value)
       .then((res: Result<UserView>) => {
         useUserStore().user = res.data;
         useUserStore().getToken();
@@ -20,9 +41,75 @@ const useForm = () => {
       });
   };
 
+  const userLoginPassword: Ref<UserLoginPassword> = ref(new UserLoginPassword());
+  const loginPassword = () => {
+    if (!userLoginPassword.value.email || !userLoginPassword.value.password) {
+      error("邮箱或密码不能为空");
+      return;
+    }
+    LoginPasswordAPI(userLoginPassword.value)
+      .then((res: Result<UserView>) => {
+        useUserStore().user = res.data;
+        useUserStore().getToken();
+      })
+      .catch(() => {
+        error("网络错误，请稍后再试");
+      });
+  };
+
+  const userRegister: Ref<UserRegister> = ref(new UserRegister());
+  const register = () => {
+    if (
+      !userRegister.value.email ||
+      !userRegister.value.password ||
+      !userRegister.value.code ||
+      !userRegister.value.password
+    ) {
+      error("请填写完整的信息");
+      return;
+    }
+    RegisterAPI(userRegister.value)
+      .then(() => {
+        formType.value = FormType.email_code;
+      })
+      .catch(() => {
+        error("网络错误，请稍后再试");
+      });
+  };
+
+  const userFindPassword: Ref<UserFindPassword> = ref(new UserFindPassword());
+  const find_password = () => {
+    if (
+      !userFindPassword.value.email ||
+      !userFindPassword.value.code ||
+      !userFindPassword.value.password
+    ) {
+      error("请填写完整的信息");
+      return;
+    }
+    FindPasswordAPI(userFindPassword.value)
+      .then((res: Result<UserView>) => {
+        formType.value = FormType.email_code;
+      })
+      .catch(() => {
+        error("网络错误，请稍后再试");
+      });
+  };
+
+  const pwdVisible = ref(false);
+
   return {
     userLogin,
+    userLoginPassword,
+    userRegister,
+    userFindPassword,
+    formType,
+    FormType,
+    pwdVisible,
     login,
+    loginPassword,
+    register,
+    find_password,
   };
 };
 
@@ -30,12 +117,12 @@ const useSendCode = () => {
   const isSendCode = ref(false);
   const sendBtnText = ref("发送验证码");
   const sendBtnDisabled = ref(false);
-  const sendCode = () => {
-    if (userLogin.value.email == "") {
+  const sendCode = (email) => {
+    if (email == "") {
       error("请填写正确的邮箱格式!");
       return;
     }
-    SendCodeAPI(userLogin.value.email).catch(() => {
+    SendCodeAPI(email).catch(() => {
       error("网络错误，请稍候再试");
     });
     isSendCode.value = true;
@@ -61,35 +148,132 @@ const useSendCode = () => {
   };
 };
 
-const { userLogin, login } = useForm();
+const {
+  userLogin,
+  userLoginPassword,
+  userRegister,
+  userFindPassword,
+  formType,
+  FormType,
+  pwdVisible,
+  login,
+  loginPassword,
+  register,
+  find_password,
+} = useForm();
 const { isSendCode, sendBtnText, sendBtnDisabled, sendCode } = useSendCode();
 </script>
 
 <template>
-  <div class="text-white text-3xl select-none">用户登录</div>
+  <div class="text-white text-3xl select-none">{{ formType }}</div>
   <div class="flex">
     <div class="flex flex-col gap-4 ml-10 mt-10 text-white">
       <div class="glass rounded-xl">
-        <v-form class="m-5">
+        <v-form v-if="formType == FormType.email_code" class="m-5">
           <v-text-field v-model="userLogin.email" label="邮箱" width="400"></v-text-field>
-          <v-btn :disabled="sendBtnDisabled" block class="mb-5" variant="tonal" @click="sendCode">{{
-            sendBtnText
-          }}</v-btn>
+          <v-btn
+            :disabled="sendBtnDisabled"
+            block
+            class="mb-5"
+            variant="tonal"
+            @click="sendCode(userLogin.email)"
+            >{{ sendBtnText }}
+          </v-btn>
           <v-expand-transition>
             <div v-show="isSendCode">
-              <v-text-field
-                v-model="userLogin.code"
-                class="text-white"
-                label="验证码"
-                width="400"
-              ></v-text-field>
+              <v-text-field v-model="userLogin.code" label="验证码" width="400"></v-text-field>
               <v-btn block variant="tonal" @click="login">登录</v-btn>
             </div>
           </v-expand-transition>
           <div class="flex justify-center mt-5">
-            <v-btn variant="text">密码登录</v-btn>
-            <v-btn variant="text">用户注册</v-btn>
-            <v-btn variant="text">密码找回</v-btn>
+            <v-btn variant="text" @click="formType = FormType.email_password">密码登录</v-btn>
+            <v-btn variant="text" @click="formType = FormType.register">用户注册</v-btn>
+            <v-btn variant="text" @click="formType = FormType.find_password">忘记密码</v-btn>
+          </div>
+        </v-form>
+
+        <v-form v-if="formType == FormType.email_password" class="m-5">
+          <v-text-field v-model="userLoginPassword.email" label="邮箱" width="400"></v-text-field>
+          <v-text-field
+            v-model="userLoginPassword.password"
+            :append-inner-icon="pwdVisible ? 'mdi-eye-off' : 'mdi-eye'"
+            :type="pwdVisible ? 'text' : 'password'"
+            label="密码"
+            width="400"
+            @click:append-inner="pwdVisible = !pwdVisible"
+          ></v-text-field>
+          <v-btn block variant="tonal" @click="loginPassword">登录</v-btn>
+          <div class="flex justify-center mt-5">
+            <v-btn variant="text" @click="formType = FormType.email_code">验证码登录</v-btn>
+            <v-btn variant="text" @click="formType = FormType.register">用户注册</v-btn>
+            <v-btn variant="text" @click="formType = FormType.find_password">忘记密码</v-btn>
+          </div>
+        </v-form>
+
+        <v-form v-if="formType == FormType.register" class="m-5">
+          <v-text-field v-model="userRegister.email" label="邮箱" width="400"></v-text-field>
+          <v-btn
+            :disabled="sendBtnDisabled"
+            block
+            class="mb-5"
+            variant="tonal"
+            @click="sendCode(userRegister.email)"
+            >{{ sendBtnText }}</v-btn
+          >
+          <v-expand-transition>
+            <div v-show="isSendCode">
+              <v-text-field v-model="userRegister.code" label="验证码" width="400"></v-text-field>
+              <v-text-field v-model="userRegister.nickname" label="昵称" width="400"></v-text-field>
+              <v-text-field
+                v-model="userRegister.password"
+                :append-inner-icon="pwdVisible ? 'mdi-eye-off' : 'mdi-eye'"
+                :type="pwdVisible ? 'text' : 'password'"
+                label="密码"
+                width="400"
+                @click:append-inner="pwdVisible = !pwdVisible"
+              ></v-text-field>
+              <v-btn block variant="tonal" @click="register">注册</v-btn>
+            </div>
+          </v-expand-transition>
+          <div class="flex justify-center mt-5">
+            <v-btn variant="text" @click="formType = FormType.email_code">验证码登录</v-btn>
+            <v-btn variant="text" @click="formType = FormType.email_password">密码登录</v-btn>
+            <v-btn variant="text" @click="formType = FormType.find_password">忘记密码</v-btn>
+          </div>
+        </v-form>
+
+        <v-form v-if="formType == FormType.find_password" class="m-5">
+          <v-text-field v-model="userFindPassword.email" label="邮箱" width="400"></v-text-field>
+          <v-btn
+            :disabled="sendBtnDisabled"
+            block
+            class="mb-5"
+            variant="tonal"
+            @click="sendCode(userFindPassword.email)"
+            >{{ sendBtnText }}</v-btn
+          >
+          <v-expand-transition>
+            <div v-show="isSendCode">
+              <v-text-field
+                v-model="userFindPassword.code"
+                label="验证码"
+                width="400"
+              ></v-text-field>
+              <v-text-field
+                v-model="userFindPassword.password"
+                :append-inner-icon="pwdVisible ? 'mdi-eye-off' : 'mdi-eye'"
+                :type="pwdVisible ? 'text' : 'password'"
+                label="新密码"
+                width="400"
+                @click:append-inner="pwdVisible = !pwdVisible"
+              ></v-text-field>
+              <v-btn block variant="tonal" @click="find_password">重设密码</v-btn>
+            </div>
+          </v-expand-transition>
+          <div class="flex justify-center mt-5">
+            <v-btn variant="text" @click="formType = FormType.email_code">验证码登录</v-btn>
+            <v-btn variant="text" @click="formType = FormType.email_password">密码登录</v-btn>
+            <v-btn variant="text" @click="formType = FormType.register">用户注册</v-btn>
           </div>
         </v-form>
       </div>

@@ -1,6 +1,9 @@
 import http from "@/utils/HttpUtils";
 import type { UserView } from "@/entity/user/UserView";
 import type { UserLogin } from "@/entity/user/UserLogin";
+import type { UserLoginPassword } from "@/entity/user/UserLoginPassword";
+import type { UserRegister } from "@/entity/user/UserRegister";
+import type { UserFindPassword } from "@/entity/user/UserFindPassword";
 
 export const ParseTokenAPI = () => {
   return http<UserView>({
@@ -41,5 +44,29 @@ export const GetTokenAPI = (id: string) => {
     params: {
       id,
     },
+  });
+};
+
+export const LoginPasswordAPI = (userLoginPassword: UserLoginPassword) => {
+  return http<UserView>({
+    url: "/user/login_password",
+    method: "POST",
+    data: userLoginPassword,
+  });
+};
+
+export const RegisterAPI = (userRegister: UserRegister) => {
+  return http<null>({
+    url: "/user/create",
+    method: "POST",
+    data: userRegister,
+  });
+};
+
+export const FindPasswordAPI = (userFindPassword: UserFindPassword) => {
+  return http<null>({
+    url: "/user/find_password",
+    method: "POST",
+    data: userFindPassword,
   });
 };
