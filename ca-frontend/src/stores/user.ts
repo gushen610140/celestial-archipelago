@@ -1,11 +1,20 @@
 import { defineStore } from "pinia";
 import { CheckLoginAPI, GetTokenAPI } from "@/apis/UserApi";
-import { UserView } from "@/entity/user/UserView";
 import { ref } from "vue";
 import { error } from "@/utils/ToastUtils";
 
 export const useUserStore = defineStore("user", () => {
-  const user = ref(new UserView());
+  const user = ref<{
+    id: string;
+    nickname: string;
+    avatar: string;
+    email: string;
+  }>({
+    id: "",
+    nickname: "",
+    avatar: "",
+    email: "",
+  });
   const token = ref("");
 
   const getToken = async () => {
@@ -25,7 +34,7 @@ export const useUserStore = defineStore("user", () => {
     if (!token) {
       return false;
     }
-    const { code } = await CheckLoginAPI();
+    const { code } = await CheckLoginAPI(token);
     return code == 200;
   };
 

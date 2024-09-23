@@ -1,20 +1,15 @@
 <script lang="ts" setup>
 import { type Ref, ref } from "vue";
-import { UserLogin } from "@/entity/user/UserLogin";
-import { error } from "@/utils/ToastUtils";
+import { error, success } from "@/utils/ToastUtils";
 import {
   FindPasswordAPI,
   LoginAPI,
   LoginPasswordAPI,
+  ParseTokenAPI,
   RegisterAPI,
   SendCodeAPI,
 } from "@/apis/UserApi";
 import { useUserStore } from "@/stores/user";
-import { UserView } from "@/entity/user/UserView";
-import { Result } from "@/entity/api/Result";
-import { UserLoginPassword } from "@/entity/user/UserLoginPassword";
-import { UserRegister } from "@/entity/user/UserRegister";
-import { UserFindPassword } from "@/entity/user/UserFindPassword";
 
 const useForm = () => {
   enum FormType {
@@ -25,14 +20,21 @@ const useForm = () => {
   }
   const formType = ref(FormType.email_code);
 
-  const userLogin: Ref<UserLogin> = ref(new UserLogin());
+  const userLogin: Ref<{
+    email: string;
+    code: string;
+  }> = ref({
+    email: "",
+    code: "",
+  });
+
   const login = () => {
     if (!userLogin.value.code || !userLogin.value.email) {
       error("邮箱或验证码不能为空");
       return;
     }
-    LoginAPI(userLogin.value)
-      .then((res: Result<UserView>) => {
+    LoginAPI(...userLogin.value)
+      .then((res) => {
         useUserStore().user = res.data;
         useUserStore().getToken();
       })
@@ -41,23 +43,40 @@ const useForm = () => {
       });
   };
 
-  const userLoginPassword: Ref<UserLoginPassword> = ref(new UserLoginPassword());
+  const userLoginPassword: Ref<{
+    email: string;
+    password: string;
+  }> = ref({
+    email: "",
+    password: "",
+  });
   const loginPassword = () => {
     if (!userLoginPassword.value.email || !userLoginPassword.value.password) {
       error("邮箱或密码不能为空");
       return;
     }
-    LoginPasswordAPI(userLoginPassword.value)
-      .then((res: Result<UserView>) => {
-        useUserStore().user = res.data;
-        useUserStore().getToken();
+    LoginPasswordAPI(...userLoginPassword.value)
+      .then((res) => {
+        const { data: user } = await ParseTokenAPI(res.data.token);
+        useUserStore().user = user;
+        useUserStore().token = res.data.token;
       })
       .catch(() => {
         error("网络错误，请稍后再试");
       });
   };
 
-  const userRegister: Ref<UserRegister> = ref(new UserRegister());
+  const userRegister: Ref<{
+    email: string;
+    password: string;
+    code: string;
+    nickname: string;
+  }> = ref({
+    email: "",
+    password: "",
+    code: "",
+    nickname: "",
+  });
   const register = () => {
     if (
       !userRegister.value.email ||
@@ -68,8 +87,9 @@ const useForm = () => {
       error("请填写完整的信息");
       return;
     }
-    RegisterAPI(userRegister.value)
-      .then(() => {
+    RegisterAPI(...userRegister.value)
+      .then((res) => {
+        success(res.message);
         formType.value = FormType.email_code;
       })
       .catch(() => {
@@ -77,7 +97,15 @@ const useForm = () => {
       });
   };
 
-  const userFindPassword: Ref<UserFindPassword> = ref(new UserFindPassword());
+  const userFindPassword: Ref<{
+    email: string;
+    code: string;
+    password: string;
+  }> = ref({
+    email: "",
+    code: "",
+    password: "",
+  });
   const find_password = () => {
     if (
       !userFindPassword.value.email ||
@@ -87,8 +115,9 @@ const useForm = () => {
       error("请填写完整的信息");
       return;
     }
-    FindPasswordAPI(userFindPassword.value)
-      .then((res: Result<UserView>) => {
+    FindPasswordAPI(...userFindPassword.value)
+      .then((res) => {
+        success(res.message);
         formType.value = FormType.email_code;
       })
       .catch(() => {

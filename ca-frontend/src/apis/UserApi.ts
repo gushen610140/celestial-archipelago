@@ -1,21 +1,27 @@
 import http from "@/utils/HttpUtils";
-import type { UserView } from "@/entity/user/UserView";
-import type { UserLogin } from "@/entity/user/UserLogin";
-import type { UserLoginPassword } from "@/entity/user/UserLoginPassword";
-import type { UserRegister } from "@/entity/user/UserRegister";
-import type { UserFindPassword } from "@/entity/user/UserFindPassword";
 
-export const ParseTokenAPI = () => {
-  return http<UserView>({
+export const ParseTokenAPI = (token: string) => {
+  return http<{
+    id: string;
+    nickname: string;
+    avatar: string;
+    email: string;
+  }>({
     url: "/user/parse_token",
-    method: "POST",
+    method: "GET",
+    params: {
+      token,
+    },
   });
 };
 
-export const CheckLoginAPI = () => {
+export const CheckLoginAPI = (token: string) => {
   return http<null>({
     url: "/user/check_login",
     method: "GET",
+    params: {
+      token,
+    },
   });
 };
 
@@ -29,16 +35,26 @@ export const SendCodeAPI = (email: string) => {
   });
 };
 
-export const LoginAPI = (userLogin: UserLogin) => {
-  return http<UserView>({
+export const LoginAPI = (email: string, code: string) => {
+  return http<{
+    id: string;
+    nickname: string;
+    avatar: string;
+    email: string;
+  }>({
     url: "/user/login",
     method: "POST",
-    data: userLogin,
+    data: {
+      email,
+      code,
+    },
   });
 };
 
 export const GetTokenAPI = (id: string) => {
-  return http<string>({
+  return http<{
+    token: string;
+  }>({
     url: "/user/get_token",
     method: "GET",
     params: {
@@ -47,26 +63,40 @@ export const GetTokenAPI = (id: string) => {
   });
 };
 
-export const LoginPasswordAPI = (userLoginPassword: UserLoginPassword) => {
-  return http<UserView>({
+export const LoginPasswordAPI = (email: string, password: string) => {
+  return http<{
+    token: string;
+  }>({
     url: "/user/login_password",
     method: "POST",
-    data: userLoginPassword,
+    data: {
+      email,
+      password,
+    },
   });
 };
 
-export const RegisterAPI = (userRegister: UserRegister) => {
+export const RegisterAPI = (email: string, password: string, nickname: string, code: string) => {
   return http<null>({
     url: "/user/create",
     method: "POST",
-    data: userRegister,
+    data: {
+      email,
+      password,
+      code,
+      nickname,
+    },
   });
 };
 
-export const FindPasswordAPI = (userFindPassword: UserFindPassword) => {
+export const FindPasswordAPI = (email: string, code: string, password: string) => {
   return http<null>({
     url: "/user/find_password",
     method: "POST",
-    data: userFindPassword,
+    data: {
+      email,
+      code,
+      password,
+    },
   });
 };
