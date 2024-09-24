@@ -33,10 +33,15 @@ const useForm = () => {
       error("邮箱或验证码不能为空");
       return;
     }
-    LoginAPI(...userLogin.value)
+    LoginAPI(userLogin.value.email, userLogin.value.code)
       .then((res) => {
-        useUserStore().user = res.data;
-        useUserStore().getToken();
+        const token = res.data.token;
+        ParseTokenAPI(token).then((res) => {
+          const { data: user } = res;
+          useUserStore().user = user;
+          useUserStore().token = token;
+          useUserStore().saveToken();
+        });
       })
       .catch(() => {
         error("网络错误，请稍后再试");
@@ -55,11 +60,15 @@ const useForm = () => {
       error("邮箱或密码不能为空");
       return;
     }
-    LoginPasswordAPI(...userLoginPassword.value)
+    LoginPasswordAPI(userLoginPassword.value.email, userLoginPassword.value.password)
       .then((res) => {
-        const { data: user } = await ParseTokenAPI(res.data.token);
-        useUserStore().user = user;
-        useUserStore().token = res.data.token;
+        const token = res.data.token;
+        ParseTokenAPI(token).then((res) => {
+          const { data: user } = res;
+          useUserStore().user = user;
+          useUserStore().token = token;
+          useUserStore().saveToken();
+        });
       })
       .catch(() => {
         error("网络错误，请稍后再试");
@@ -87,9 +96,19 @@ const useForm = () => {
       error("请填写完整的信息");
       return;
     }
-    RegisterAPI(...userRegister.value)
+    RegisterAPI(
+      userRegister.value.email,
+      userRegister.value.password,
+      userRegister.value.nickname,
+      userRegister.value.code,
+    )
       .then((res) => {
-        success(res.message);
+        const { code, message } = res;
+        if (code == 200) {
+          success(message);
+        } else {
+          error(message);
+        }
         formType.value = FormType.email_code;
       })
       .catch(() => {
@@ -115,7 +134,11 @@ const useForm = () => {
       error("请填写完整的信息");
       return;
     }
-    FindPasswordAPI(...userFindPassword.value)
+    FindPasswordAPI(
+      userFindPassword.value.email,
+      userFindPassword.value.code,
+      userFindPassword.value.password,
+    )
       .then((res) => {
         success(res.message);
         formType.value = FormType.email_code;

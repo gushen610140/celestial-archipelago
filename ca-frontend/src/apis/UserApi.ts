@@ -37,10 +37,7 @@ export const SendCodeAPI = (email: string) => {
 
 export const LoginAPI = (email: string, code: string) => {
   return http<{
-    id: string;
-    nickname: string;
-    avatar: string;
-    email: string;
+    token: string;
   }>({
     url: "/user/login",
     method: "POST",

@@ -1,11 +1,12 @@
 <script lang="ts" setup>
 import { resourcesUrl } from "@/utils/ResourcesUrlUtils";
 import { changeRoute } from "@/utils/RouteUtils";
-import { onMounted } from "vue";
+import { onMounted, ref } from "vue";
 import UserLoginComp from "@/components/UserLoginComp.vue";
 import { useUserStore } from "@/stores/user";
 import UserInfoComp from "@/components/UserInfoComp.vue";
 import GradientTextUI from "@/components/ui/GradientTextUI.vue";
+import { CheckLoginAPI } from "@/apis/UserApi";
 
 const useNavItems = () => {
   type item = {
@@ -45,9 +46,25 @@ const useNavItems = () => {
   };
 };
 
-const { items } = useNavItems();
+const useCheckLogin = () => {
+  const isLoginValid = ref(false);
 
-onMounted(() => {});
+  return {
+    isLoginValid,
+  };
+};
+
+const { items } = useNavItems();
+const { isLoginValid } = useCheckLogin();
+
+onMounted(async () => {
+  const token = useUserStore().token;
+  const { code } = await CheckLoginAPI(token);
+  if (code == 200) {
+    await useUserStore().setUser();
+    isLoginValid.value = true;
+  }
+});
 </script>
 
 <template>
@@ -74,7 +91,7 @@ onMounted(() => {});
     </div>
     <div class="flex items-center">
       <div class="ml-60 p-10 glass" style="width: 60rem; height: 40rem">
-        <UserLoginComp v-if="!useUserStore().token"></UserLoginComp>
+        <UserLoginComp v-if="!isLoginValid"></UserLoginComp>
         <UserInfoComp v-else></UserInfoComp>
       </div>
     </div>

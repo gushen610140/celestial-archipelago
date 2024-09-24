@@ -3,6 +3,7 @@ import type { Result } from "@/entity/api/Result";
 
 const instance = axios.create({
   baseURL: import.meta.env.VITE_DEV_ENV,
+  withCredentials: true,
 });
 
 const http = async <T>(config: AxiosRequestConfig): Promise<Result<T>> => {

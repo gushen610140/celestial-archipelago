@@ -1,10 +1,9 @@
 <script lang="ts" setup>
 import { useUserStore } from "@/stores/user";
 import { computed } from "vue";
-import type { UserView } from "@/entity/user/UserView";
 
 const useUserInfo = () => {
-  const user: UserView = computed(() => useUserStore().user);
+  const user = computed(() => useUserStore().user);
 
   return {
     user,

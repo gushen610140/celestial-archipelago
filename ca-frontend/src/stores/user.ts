@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { CheckLoginAPI, GetTokenAPI } from "@/apis/UserApi";
+import { CheckLoginAPI, GetTokenAPI, ParseTokenAPI } from "@/apis/UserApi";
 import { ref } from "vue";
 import { error } from "@/utils/ToastUtils";
 
@@ -15,9 +15,13 @@ export const useUserStore = defineStore("user", () => {
     avatar: "",
     email: "",
   });
-  const token = ref("");
+  const token = ref(localStorage.getItem("token") || "");
 
   const getToken = async () => {
+    if (!user.value.id) {
+      error("用户未登录");
+      return;
+    }
     try {
       const { code, data }: { code: number; data: string } = await GetTokenAPI(user.value.id);
       if (code == 200) {
@@ -26,7 +30,7 @@ export const useUserStore = defineStore("user", () => {
         error("网络错误，请稍候再试");
       }
     } catch (e) {
-      console.error("网络错误，请稍候再试");
+      error("网络错误，请稍候再试");
     }
   };
 
@@ -38,10 +42,28 @@ export const useUserStore = defineStore("user", () => {
     return code == 200;
   };
 
+  const saveToken = () => {
+    if (!token.value) {
+      error("token不存在");
+      return;
+    }
+    localStorage.setItem("token", token.value);
+  };
+
+  const setUser = async () => {
+    const { data } = await ParseTokenAPI(token.value);
+    user.value.id = data.id;
+    user.value.nickname = data.nickname;
+    user.value.avatar = data.avatar;
+    user.value.email = data.email;
+  };
+
   return {
     user,
     token,
     getToken,
     checkLogin,
+    saveToken,
+    setUser,
   };
 });
